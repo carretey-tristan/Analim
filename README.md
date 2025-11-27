@@ -1,85 +1,67 @@
-# Analim
+# ANALIM — Documentation
 
-Projet de gestion d'un congrès (API + site web) — application PHP légère.
+Cette documentation décrit le mini-projet "Analim" : structure, routes, controllers, repositories, vues, et points d'attention (sécurité, amélioration).
 
-## Vue d'ensemble
+## Aperçu
+C'est une application PHP simple (sans framework) qui gère des congressistes et leurs factures. Le rendu HTML est produit via des vues classiques, et la génération de PDF utilise Dompdf.
 
-Ce dépôt contient deux parties principales :
-- une API (`API_Congres/`) pour exposer des endpoints REST-like ;
-- une interface web (`Site_Congres/`) pour la gestion et la consultation (authentification, liste des conférences, inscriptions, etc.).
+Technos principales
+- PHP (>= 7.4 / 8.x recommandé)
+- PDO (MySQL)
+- dompdf/dompdf (via Composer)
 
-Le projet utilise une architecture PHP classique (contrôleurs, repositories, vues) et inclut la bibliothèque `dompdf` pour la génération de PDF (ex. factures).
+## Arborescence principale
+- `index.php` : front controller (router minimal basé sur `?c=CONTROLLER&a=ACTION`)
+- `config/Database.php` : configuration de la connexion PDO
+- `controllers/` : contrôleurs (AuthController, AccountController, AdminController, FactureController, BaseController)
+- `repository/` : couche d'accès aux données (AuthRepository, CongressisteRepository, FactureRepository, HotelRepository, OrganismePayeurRepository)
+- `classe/` : classes métier (Congressiste, Facture, Hotel, OrganismePayeur, ...)
+- `views/` : vues PHP pour rendre les pages et le PDF (`views/facture/pdf.php` pour la facture)
+- `app/css/` : styles
 
-## Prérequis
+## Routes / points d'entrée
+Le front controller lit `$_GET['c']` (controller) et `$_GET['a']` (action). Exemples utiles :
 
-- PHP 7.4+ (ou version compatible) installé via WAMP, XAMPP ou équivalent.
-- Composer (https://getcomposer.org/) pour gérer les dépendances.
-- MySQL / MariaDB pour la base de données.
-- Un serveur web local configuré (Apache dans WAMP/XAMPP) ou utilisation du serveur PHP intégré pour des tests.
+- `index.php?c=auth&a=login` — formulaire de connexion (POST → même route)
+- `index.php?c=auth&a=register` — inscription (POST → même route)
+- `index.php?c=account&a=monespace` — page "Mon espace" (accessible si connecté)
+- `index.php?c=admin` — tableau d'administration (accessible aux agents/admins)
+- `index.php?c=admin&a=create&id=123` — créer une facture pour le congressiste 123 (POST idéalement)
+- `index.php?c=facture&a=pdf&id=456` — génère et affiche la facture PDF #456
 
-## Installation rapide
+## Authentification et sessions
+- L'authentification est simple : `AuthRepository::findByEmail()` et `password_verify()` sont utilisés.
+- Après login, sont stockés en session :
+  - `$_SESSION['user_id']` — id du congressiste connecté
+  - `$_SESSION['email']` — email
+  - `$_SESSION['is_agent']` — bool (vrai si user id == 25 dans l'implémentation actuelle)
 
-1. Copier le dossier `Analim` dans votre répertoire web (ex : `c:\wamp64\www\congres\Analim`).
-2. Depuis le dossier `Analim`, installer les dépendances :
+Remarque : l'utilisation d'un `is_agent` basé sur l'id est temporaire et fragile. Préférez ajouter un champ `role` dans la table `CONGRESSISTE`.
 
-```powershell
-composer install
-```
+## Contrôleurs importants
+- `AuthController` : login, register, création de session
+- `AccountController::monEspace()` : récupère les factures du congressiste connecté
+- `AdminController::index()` : affiche la liste des factures (filtrage) et les congressistes sans facture — accès restreint aux agents
+- `FactureController::pdf()` : charge la `Facture` via `FactureRepository::findById()` puis inclut `views/facture/pdf.php` pour produire le HTML et utilise Dompdf pour afficher le PDF.
+  - Ajout d'une vérification d'autorisation : seul le propriétaire (congressiste) ou un agent peut voir une facture.
 
-3. Configurer la base de données :
-   - Ouvrir `config/database.php` et renseigner `host`, `dbname`, `user`, `password`.
-4. Créer la base de données et les tables nécessaires : importer votre dump SQL via phpMyAdmin ou `mysql` si vous en disposez.
+## Repositories
+- `AuthRepository` : recherche et création d'utilisateurs (congressistes)
+- `CongressisteRepository` : recherche par id, liste des congressistes, relation vers `Hotel` et `OrganismePayeur`
+- `FactureRepository` : logique métier pour trouver, créer et prévisualiser des factures ; calcule des montants agrégés (hôtel, sessions, activités, acompte)
+- `HotelRepository`, `OrganismePayeurRepository` : petites méthodes utilitaires pour récupérer les objets reliés
 
-## Structure du projet
+## Vues
+- `views/admin/index.php` — tableau des factures et listing des congressistes sans facture
+- `views/account/monespace.php` — page personnelle affichant les factures de l'utilisateur
+- `views/facture/pdf.php` — template HTML stylé transformé en PDF par Dompdf
 
-- `API_Congres/` : API (point d'entrée `index.php`), classes métier et contrôleurs REST.
-- `Site_Congres/` : application front (point d'entrée `index.php`, contrôleurs côté client, vues et assets).
-- `classe/` : entités métier (ex. `conference.php`, `intervenant.php`, `seminaire.php`).
-- `config/` : fichiers de configuration (notamment `database.php`).
-- `repository/` : classes d'accès aux données (pattern repository).
-- `vendor/` : dépendances Composer (ex. `dompdf`).
-- `Site_Congres/views/` : vues et templates pour l'interface utilisateur.
+Remarque : certaines vues supportent à la fois des objets et des tableaux (le code vérifie `is_array` et `is_object` lorsque nécessaire).
 
-> Remarque : il existe un `README.md` spécifique dans `Site_Congres/` qui décrit le front-end plus en détail.
+## Dépendances
+- dompdf/dompdf (via Composer)
+  - Assurez-vous d'avoir exécuté `composer install` pour installer `vendor/`.
 
-## Points d'attention
-
-- `config/database.php` : configurez correctement vos identifiants DB avant d'exécuter l'application.
-- `vendor/` : si ce dossier n'est pas présent, lancer `composer install`.
-- Génération PDF : la logique se trouve dans les contrôleurs/ vues utilisant `dompdf` (voir `controllers/FactureController.php` si présent).
-
-## Lancement et accès
-
-- Application (site) : `http://localhost/congres/Analim/Site_Congres/` (ou selon votre configuration de virtual host).
-- API : `http://localhost/congres/Analim/API_Congres/`.
-
-Pour tests rapides depuis la ligne de commande (PHP built-in server) :
-
-```powershell
-cd c:\wamp64\www\congres\Analim\Site_Congres
-php -S localhost:8000
-# puis ouvrir http://localhost:8000
-```
-
-## Bonnes pratiques
-
-- Ne commitez pas vos identifiants de base de données : utilisez un fichier local ignoré ou des variables d'environnement.
-- Vérifiez les permissions d'écriture si l'application doit gérer des uploads (photos, PDF générés).
-- Documentez et versionnez les dumps SQL d'installation si vous partagez le projet.
-
-## Développement et contribution
-
-- Forkez le dépôt, créez une branche par fonctionnalité et ouvrez une Pull Request.
-- Ajoutez des tests unitaires / d'intégration (PHPUnit) et un linter (PHPStan) pour améliorer la qualité du code.
-
-## Prochaines améliorations suggérées
-
-- Ajouter un dump SQL `database/schema.sql` et un script `setup` pour automatiser l'installation.
-- Ajouter un guide de configuration pour les environnements (dev / prod).
-
-## Contact
-
-Pour toute question, ouvrez un issue dans le dépôt ou contactez l'auteur.
 
 ---
-README mis à jour : correction et clarifications sur l'installation et la structure.
+
