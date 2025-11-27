@@ -2,82 +2,84 @@
 
 Projet de gestion d'un congrès (API + site web) — application PHP légère.
 
-## Description
+## Vue d'ensemble
 
-Ce dépôt contient deux parties principales : une API et une interface site web pour gérer les congressistes, les sessions, les factures, hôtels et organismes payeurs. Le projet s'appuie sur PHP classique (structure organisée par contrôleurs, repository et vues) et utilise la librairie `dompdf` pour la génération de PDFs (factures).
+Ce dépôt contient deux parties principales :
+- une API (`API_Congres/`) pour exposer des endpoints REST-like ;
+- une interface web (`Site_Congres/`) pour la gestion et la consultation (authentification, liste des conférences, inscriptions, etc.).
 
-## Structure du projet
-
-- `API_Congres/` : point d'entrée API (REST-like) et logique back-end pour exposer des endpoints. Fichier principal : `API_Congres/index.php`.
-- `Site_Congres/` : interface front-end (pages publiques et formulaires). Fichier principal : `Site_Congres/index.php`.
-- `classe/` : classes principales du domaine (ex : `Activite.php`, `Congressiste.php`, `Facture.php`, `Hotel.php`, `OrganismePayeur.php`, `Session.php`).
-- `config/` : configuration, notamment `config/database.php` pour la connexion à la base de données.
-- `controllers/` : contrôleurs côté serveur (ex : `AuthController.php`, `FactureController.php`, `AdminController.php`, etc.).
-- `repository/` : classes d'accès aux données (pattern repository) pour chaque entité.
-- `views/` : templates/partials et vues HTML (inclut la vue `facture/pdf.php` utilisée pour la génération PDF).
-- `vendor/` : dépendances gérées par Composer (incluant `dompdf` pour la génération de PDF).
+Le projet utilise une architecture PHP classique (contrôleurs, repositories, vues) et inclut la bibliothèque `dompdf` pour la génération de PDF (ex. factures).
 
 ## Prérequis
 
-- PHP 7.4+ (ou version compatible installée via WAMP). Tester avec `php -v`.
-- Composer (pour installer les dépendances). Télécharger depuis https://getcomposer.org/.
-- Serveur web local (WAMP, XAMPP, ou PHP built-in server pour tests).
-- Une base de données MySQL/MariaDB et les informations de connexion à renseigner dans `config/database.php`.
+- PHP 7.4+ (ou version compatible) installé via WAMP, XAMPP ou équivalent.
+- Composer (https://getcomposer.org/) pour gérer les dépendances.
+- MySQL / MariaDB pour la base de données.
+- Un serveur web local configuré (Apache dans WAMP/XAMPP) ou utilisation du serveur PHP intégré pour des tests.
 
-## Installation
+## Installation rapide
 
-1. Placer le dossier dans le répertoire web (ex : `c:\wamp64\www\congres\Analim`).
-2. Ouvrir une console depuis le dossier `Analim` et exécuter :
+1. Copier le dossier `Analim` dans votre répertoire web (ex : `c:\wamp64\www\congres\Analim`).
+2. Depuis le dossier `Analim`, installer les dépendances :
 
-	`composer install`
+```powershell
+composer install
+```
 
-	Cela installera les dépendances présentes dans `vendor/` si elles ne sont pas déjà installées.
-3. Configurer la base de données : ouvrir `config/database.php` et modifier les paramètres (`host`, `dbname`, `user`, `password`) selon votre environnement.
-4. Créer la base de données et les tables nécessaires. (Le dépôt ne contient pas toujours un dump SQL ; si vous en avez un, importez-le via phpMyAdmin ou `mysql`.)
+3. Configurer la base de données :
+   - Ouvrir `config/database.php` et renseigner `host`, `dbname`, `user`, `password`.
+4. Créer la base de données et les tables nécessaires : importer votre dump SQL via phpMyAdmin ou `mysql` si vous en disposez.
 
-## Configuration
+## Structure du projet
 
-- `config/database.php` : mettez vos identifiants DB et testez la connexion.
-- `API_Congres/index.php` et `Site_Congres/index.php` : points d'entrée pour l'API et le site. Vérifiez les chemins et virtual hosts selon votre configuration WAMP.
+- `API_Congres/` : API (point d'entrée `index.php`), classes métier et contrôleurs REST.
+- `Site_Congres/` : application front (point d'entrée `index.php`, contrôleurs côté client, vues et assets).
+- `classe/` : entités métier (ex. `conference.php`, `intervenant.php`, `seminaire.php`).
+- `config/` : fichiers de configuration (notamment `database.php`).
+- `repository/` : classes d'accès aux données (pattern repository).
+- `vendor/` : dépendances Composer (ex. `dompdf`).
+- `Site_Congres/views/` : vues et templates pour l'interface utilisateur.
 
-## Usage
+> Remarque : il existe un `README.md` spécifique dans `Site_Congres/` qui décrit le front-end plus en détail.
 
-- Accéder au site : `http://localhost/congres/Analim/Site_Congres/` (ou selon votre configuration Apache / virtual host).
-- Accéder à l'API : `http://localhost/congres/Analim/API_Congres/` (les routes sont gérées dans ce dossier via `index.php` et les contrôleurs).
+## Points d'attention
 
-## Génération de PDF (Factures)
+- `config/database.php` : configurez correctement vos identifiants DB avant d'exécuter l'application.
+- `vendor/` : si ce dossier n'est pas présent, lancer `composer install`.
+- Génération PDF : la logique se trouve dans les contrôleurs/ vues utilisant `dompdf` (voir `controllers/FactureController.php` si présent).
 
-La génération de factures en PDF utilise `dompdf`. La vue `views/facture/pdf.php` contient le template HTML qui sera converti en PDF par la librairie. Exemples d'utilisation : voir `controllers/FactureController.php` et la repository correspondante pour la logique d'assemblage des données et rendu.
+## Lancement et accès
 
-## Fichiers et composants importants
+- Application (site) : `http://localhost/congres/Analim/Site_Congres/` (ou selon votre configuration de virtual host).
+- API : `http://localhost/congres/Analim/API_Congres/`.
 
-- `classe/` : modèles métier.
-- `controllers/` : logique applicative (authentification, administration, facturation, etc.).
-- `repository/` : accès aux données (CRUD pour les entités).
-- `views/partials/header.php` et `views/partials/footer.php` : layout commun.
-- `views/facture/pdf.php` : template PDF.
-- `vendor/dompdf/` : librairie de conversion HTML -> PDF.
+Pour tests rapides depuis la ligne de commande (PHP built-in server) :
 
-## Bonnes pratiques et notes
+```powershell
+cd c:\wamp64\www\congres\Analim\Site_Congres
+php -S localhost:8000
+# puis ouvrir http://localhost:8000
+```
 
-- Sauvegardez vos identifiants DB en dehors du contrôle de version si possible (utiliser des variables d'environnement ou un fichier de configuration local ignoré par git).
-- Si vous ajoutez des dépendances, lancez `composer install` ou `composer update` selon le cas.
-- Tester les pages et l'API via navigateur ou outils type Postman.
+## Bonnes pratiques
+
+- Ne commitez pas vos identifiants de base de données : utilisez un fichier local ignoré ou des variables d'environnement.
+- Vérifiez les permissions d'écriture si l'application doit gérer des uploads (photos, PDF générés).
+- Documentez et versionnez les dumps SQL d'installation si vous partagez le projet.
 
 ## Développement et contribution
 
-- Pour contribuer, forkez le dépôt, faites une branche par fonctionnalité, et créez une Pull Request quand prêt.
-- Documentez les changements importants et mettez à jour ce `README.md` si de nouveaux composants ou instructions d'installation sont ajoutés.
+- Forkez le dépôt, créez une branche par fonctionnalité et ouvrez une Pull Request.
+- Ajoutez des tests unitaires / d'intégration (PHPUnit) et un linter (PHPStan) pour améliorer la qualité du code.
 
-## Prochaines étapes suggérées
+## Prochaines améliorations suggérées
 
-- Ajouter un dump SQL d'installation (`database/schema.sql`) si nécessaire.
-- Ajouter des scripts d'autotests ou validateurs PHP (ex : PHPStan, PHPUnit) si vous souhaitez assurer la qualité du code.
+- Ajouter un dump SQL `database/schema.sql` et un script `setup` pour automatiser l'installation.
+- Ajouter un guide de configuration pour les environnements (dev / prod).
 
 ## Contact
 
-Pour questions ou aide, documentez un issue dans le dépôt ou contactez l'auteur du projet.
+Pour toute question, ouvrez un issue dans le dépôt ou contactez l'auteur.
 
 ---
-Fait pour faciliter l'installation et la compréhension rapide du projet Analim.
-projet congrés
+README mis à jour : correction et clarifications sur l'installation et la structure.
