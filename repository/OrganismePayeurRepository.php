@@ -9,8 +9,8 @@ class OrganismePayeurRepository {
     }
 
     public function findOrganismeByIdCongressiste(int $id): ?OrganismePayeur {
-        $SQL = "SELECT * FROM ORGANISME_PAYEUR
-                WHERE (SELECT id_organisme FROM CONGRESSISTE WHERE id_congressiste = :id) = id_organisme";
+        $SQL = "SELECT * FROM organisme_payeur
+                WHERE (SELECT id_organisme FROM congressiste WHERE id_congressiste = :id) = id_organisme";
         $stmt = $this->db->prepare($SQL);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();

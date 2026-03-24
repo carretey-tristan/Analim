@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../classe/facture.php';
+require_once __DIR__ . '/../classe/Facture.php';
 require_once __DIR__ . '/../classe/Congressiste.php';
 require_once __DIR__ . '/../classe/OrganismePayeur.php';
 
@@ -18,13 +18,13 @@ class FactureRepository {
                                         c.nom AS nom_congressiste, c.prenom AS prenom_congressiste,
                                         IFNULL(op.nom_organisme, 'Congressiste') AS payeur,
                                         h.prix AS cout_hotel,
-                                        IFNULL((SELECT SUM(s.prix_session) FROM PARTICIPATION_SESSION ps JOIN SESSION s ON ps.id_session = s.id_session WHERE ps.id_congressiste = c.id_congressiste),0) AS total_sessions,
-                                        IFNULL((SELECT SUM(a.prix_activite) FROM PARTICIPATION_ACTIVITE pa JOIN ACTIVITE a ON pa.id_activite = a.id_activite WHERE pa.id_congressiste = c.id_congressiste),0) AS total_activites,
+                                        IFNULL((SELECT SUM(s.prix_session) FROM participation_session ps JOIN session s ON ps.id_session = s.id_session WHERE ps.id_congressiste = c.id_congressiste),0) AS total_sessions,
+                                        IFNULL((SELECT SUM(a.prix_activite) FROM participation_activite pa JOIN activite a ON pa.id_activite = a.id_activite WHERE pa.id_congressiste = c.id_congressiste),0) AS total_activites,
                                         (CASE WHEN c.acompte THEN 100.00 ELSE 0.00 END) AS montant_acompte
-                                    FROM FACTURE f
-                                    JOIN CONGRESSISTE c ON f.id_congressiste = c.id_congressiste
-                                    LEFT JOIN ORGANISME_PAYEUR op ON f.id_organisme = op.id_organisme
-                                    LEFT JOIN HOTEL h ON c.id_hotel = h.id_hotel";
+                                    FROM facture f
+                                    JOIN congressiste c ON f.id_congressiste = c.id_congressiste
+                                    LEFT JOIN organisme_payeur op ON f.id_organisme = op.id_organisme
+                                    LEFT JOIN hotel h ON c.id_hotel = h.id_hotel";
 
         if ($statut === 'reglee') {
             $SQL .= " WHERE f.statut_reglement = 1"; // TRUE
@@ -38,7 +38,7 @@ class FactureRepository {
     }
 
     public function findByCongressisteId(int $id): array {
-        $sql = "SELECT id_facture FROM FACTURE WHERE id_congressiste = :id";
+        $sql = "SELECT id_facture FROM facture WHERE id_congressiste = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -53,19 +53,19 @@ class FactureRepository {
                 op.id_organisme, op.nom_organisme, op.adresse_organisme,
                 h.prix AS cout_hotel,
                 
-                (SELECT SUM(s.prix_session) FROM PARTICIPATION_SESSION ps
-                 JOIN SESSION s ON ps.id_session = s.id_session
+                (SELECT SUM(s.prix_session) FROM participation_session ps
+                 JOIN session s ON ps.id_session = s.id_session
                  WHERE ps.id_congressiste = f.id_congressiste) AS total_sessions,
                  
-                (SELECT SUM(a.prix_activite) FROM PARTICIPATION_ACTIVITE pa
-                 JOIN ACTIVITE a ON pa.id_activite = a.id_activite
+                (SELECT SUM(a.prix_activite) FROM participation_activite pa
+                 JOIN activite a ON pa.id_activite = a.id_activite
                  WHERE pa.id_congressiste = f.id_congressiste) AS total_activites
                  
 
-            FROM FACTURE f
-            JOIN CONGRESSISTE c ON f.id_congressiste = c.id_congressiste
-            LEFT JOIN ORGANISME_PAYEUR op ON f.id_organisme = op.id_organisme
-            LEFT JOIN HOTEL h ON c.id_hotel = h.id_hotel
+            FROM facture f
+            JOIN congressiste c ON f.id_congressiste = c.id_congressiste
+            LEFT JOIN organisme_payeur op ON f.id_organisme = op.id_organisme
+            LEFT JOIN hotel h ON c.id_hotel = h.id_hotel
             WHERE f.id_facture = :id_facture
         ";
 
@@ -113,7 +113,7 @@ class FactureRepository {
 
     public function create($id_congressiste) {
         // ... (Vérification si facture existe déjà)
-        $checkQuery = "SELECT id_facture FROM FACTURE WHERE id_congressiste = :id";
+        $checkQuery = "SELECT id_facture FROM facture WHERE id_congressiste = :id";
         $checkStmt = $this->db->prepare($checkQuery);
         $checkStmt->execute([':id' => $id_congressiste]);
         if ($checkStmt->fetch()) {
@@ -122,13 +122,13 @@ class FactureRepository {
         }
 
         // ... (Récupération de l'organisme)
-        $orgQuery = "SELECT id_organisme FROM CONGRESSISTE WHERE id_congressiste = :id";
+        $orgQuery = "SELECT id_organisme FROM congressiste WHERE id_congressiste = :id";
         $orgStmt = $this->db->prepare($orgQuery);
         $orgStmt->execute([':id' => $id_congressiste]);
         $id_organisme = $orgStmt->fetchColumn();
 
         // ... (Insertion)
-        $insertQuery = "INSERT INTO FACTURE (date_facture, statut_reglement, id_organisme, id_congressiste)
+        $insertQuery = "INSERT INTO facture (date_facture, statut_reglement, id_organisme, id_congressiste)
                         VALUES (CURDATE(), FALSE, :id_organisme, :id_congressiste)";
         
         $stmt = $this->db->prepare($insertQuery);
@@ -155,10 +155,10 @@ class FactureRepository {
             SELECT
                 c.id_congressiste, c.nom, c.prenom, c.acompte,
                 h.prix AS cout_hotel,
-                (SELECT IFNULL(SUM(s.prix_session),0) FROM PARTICIPATION_SESSION ps JOIN SESSION s ON ps.id_session = s.id_session WHERE ps.id_congressiste = c.id_congressiste) AS total_sessions,
-                (SELECT IFNULL(SUM(a.prix_activite),0) FROM PARTICIPATION_ACTIVITE pa JOIN ACTIVITE a ON pa.id_activite = a.id_activite WHERE pa.id_congressiste = c.id_congressiste) AS total_activites
-            FROM CONGRESSISTE c
-            LEFT JOIN HOTEL h ON c.id_hotel = h.id_hotel
+                (SELECT IFNULL(SUM(s.prix_session),0) FROM participation_session ps JOIN session s ON ps.id_session = s.id_session WHERE ps.id_congressiste = c.id_congressiste) AS total_sessions,
+                (SELECT IFNULL(SUM(a.prix_activite),0) FROM participation_activite pa JOIN activite a ON pa.id_activite = a.id_activite WHERE pa.id_congressiste = c.id_congressiste) AS total_activites
+            FROM congressiste c
+            LEFT JOIN hotel h ON c.id_hotel = h.id_hotel
             WHERE c.id_congressiste = :id
         ";
 
@@ -189,7 +189,7 @@ class FactureRepository {
      * @return bool true si suppression effectuée
      */
     public function delete(int $id_facture): bool {
-        $sql = "DELETE FROM FACTURE WHERE id_facture = :id";
+        $sql = "DELETE FROM facture WHERE id_facture = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':id' => $id_facture]);
     }
@@ -198,7 +198,7 @@ class FactureRepository {
      * Indique si une facture a déjà un règlement (statut_reglement = 1)
      */
     public function hasReglement(int $id_facture): bool {
-        $sql = "SELECT statut_reglement FROM FACTURE WHERE id_facture = :id LIMIT 1";
+        $sql = "SELECT statut_reglement FROM facture WHERE id_facture = :id LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id_facture]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);

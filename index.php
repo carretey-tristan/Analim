@@ -1,12 +1,20 @@
 <?php
-// Front controller
+// Enable error reporting for debugging on Proxmox
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 header("Content-Type: text/html; charset=UTF-8");
-require_once __DIR__ . '/config/Database.php';
+require_once __DIR__ . '/config/database.php';
 
 $controller = $_GET['c'] ?? 'home';
 $action = $_GET['a'] ?? 'index';
 
 $db = (new Database())->getConnection();
+
+if (!$db) {
+    die("Erreur critique : Impossible de se connecter à la base de données. Vérifiez vos identifiants dans config/database.php");
+}
 
 // map controller name to class/file
 switch ($controller) {

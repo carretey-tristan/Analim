@@ -14,7 +14,7 @@ class CongressisteRepository {
     }
 
     public function findAll() {
-        $query = "SELECT * FROM CONGRESSISTE";
+        $query = "SELECT * FROM congressiste";
         $stmt = $this->db->prepare($query);
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -42,7 +42,7 @@ class CongressisteRepository {
         return $out;
     }
     public function findById(int $id): ?Congressiste {
-        $query = "SELECT * FROM CONGRESSISTE WHERE id_congressiste = :id";
+        $query = "SELECT * FROM congressiste WHERE id_congressiste = :id";
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -70,8 +70,8 @@ class CongressisteRepository {
     }
 
     public function findNonFactures() {
-        $query = "SELECT c.* FROM CONGRESSISTE c
-                  LEFT JOIN FACTURE f ON c.id_congressiste = f.id_congressiste
+        $query = "SELECT c.* FROM congressiste c
+                  LEFT JOIN facture f ON c.id_congressiste = f.id_congressiste
                   WHERE f.id_facture IS NULL
                   ORDER BY c.nom, c.prenom";
         $stmt = $this->db->prepare($query);

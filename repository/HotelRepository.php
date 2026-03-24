@@ -9,7 +9,8 @@ class HotelRepository {
     }
     
     public function findHotelsByIdCongressiste(int $id): ?Hotel {
-        $SQL = "SELECT * FROM HOTEL WHERE (Select id_hotel FROM CONGRESSISTE WHERE id_congressiste = :id) = id_hotel";
+        $SQL = "SELECT * FROM organisme_payeur
+                WHERE (SELECT id_organisme FROM congressiste WHERE id_congressiste = :id) = id_organisme";
         $stmt = $this->db->prepare($SQL);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();

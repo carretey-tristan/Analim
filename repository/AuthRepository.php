@@ -6,7 +6,7 @@ class AuthRepository {
     public function __construct(PDO $db) { $this->db = $db; }
 
     public function findByEmail(string $email): ?Congressiste {
-        $sql = "SELECT * FROM CONGRESSISTE WHERE email = :email LIMIT 1";
+        $sql = "SELECT * FROM congressiste WHERE email = :email LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':email' => $email]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -25,7 +25,7 @@ class AuthRepository {
     }
 
     public function findById(int $id): ?Congressiste {
-        $sql = "SELECT * FROM CONGRESSISTE WHERE id_congressiste = :id LIMIT 1";
+        $sql = "SELECT * FROM congressiste WHERE id_congressiste = :id LIMIT 1";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -44,7 +44,7 @@ class AuthRepository {
     }
 
     public function create(array $data): array {
-        $sql = "INSERT INTO CONGRESSISTE (nom, prenom, adresse, email, password, acompte, supplement_petit_dejeuner, nb_etoile_souhaite) VALUES (:nom, :prenom, :adresse, :email, :password, :acompte, :supplement, :nb_etoile)";
+        $sql = "INSERT INTO congressiste (nom, prenom, adresse, email, password, acompte, supplement_petit_dejeuner, nb_etoile_souhaite) VALUES (:nom, :prenom, :adresse, :email, :password, :acompte, :supplement, :nb_etoile)";
         $stmt = $this->db->prepare($sql);
         $success = $stmt->execute([
             ':nom' => $data['nom'],
